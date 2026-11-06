@@ -1,0 +1,154 @@
+{
+  "name": "HelpDeskAI - New ticket",
+  "nodes": [
+    {
+      "id": "node-1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "helpdesk-ticket-created",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticket-created",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-2",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first().json;\nconst secret = $env.AUTOMATION_WEBHOOK_SECRET || '';\nconst given = String((item.headers || {})['x-helpdesk-signature'] || '');\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(JSON.stringify(item.body)).digest('hex');\nconst a = Buffer.from(given);\nconst b = Buffer.from(expected);\nif (!secret || a.length !== b.length || !crypto.timingSafeEqual(a, b)) {\n  throw new Error('Invalid webhook signature');\n}\nreturn [{ json: Object.assign({}, item.body, { startedAt: new Date().toISOString() }) }];"
+      }
+    },
+    {
+      "id": "node-3",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        300
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "fromEmail": "HelpDeskAI <helpdesk@helpdesk.local>",
+        "toEmail": "support@helpdesk.local",
+        "subject": "={{ \"[New ticket] \" + $json.data.title }}",
+        "emailFormat": "text",
+        "text": "=A new ticket was created.\n\nTitle: {{ $json.data.title }}\nPriority: {{ $json.data.priority }}\nCategory: {{ $json.data.category }}\nRequester: {{ $json.data.requesterEmail }}\n\nOpen it: http://localhost:8080/tickets/{{ $json.data.ticketId }}\n",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-4",
+      "name": "Log success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.API_BASE_URL }}/automation/logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"new-ticket\", eventId: $(\"Verify signature\").first().json.eventId, ticketId: $(\"Verify signature\").first().json.data.ticketId, status: \"success\", startedAt: $(\"Verify signature\").first().json.startedAt, finishedAt: new Date().toISOString() }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-5",
+      "name": "Log failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.API_BASE_URL }}/automation/logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"new-ticket\", eventId: $(\"Verify signature\").first().json.eventId, ticketId: $(\"Verify signature\").first().json.data.ticketId, status: \"failure\", errorSummary: (typeof $json.error === \"string\" ? $json.error : (($json.error && $json.error.message) || \"Unknown error\")).slice(0, 300), startedAt: $(\"Verify signature\").first().json.startedAt, finishedAt: new Date().toISOString() }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Log success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "name": "HelpDeskAI - Resolution follow-up",
+  "nodes": [
+    {
+      "id": "node-1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "helpdesk-ticket-resolved",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticket-resolved",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-2",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first().json;\nconst secret = $env.AUTOMATION_WEBHOOK_SECRET || '';\nconst given = String((item.headers || {})['x-helpdesk-signature'] || '');\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(JSON.stringify(item.body)).digest('hex');\nconst a = Buffer.from(given);\nconst b = Buffer.from(expected);\nif (!secret || a.length !== b.length || !crypto.timingSafeEqual(a, b)) {\n  throw new Error('Invalid webhook signature');\n}\nreturn [{ json: Object.assign({}, item.body, { startedAt: new Date().toISOString() }) }];"
+      }
+    },
+    {
+      "id": "node-3",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 1,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "node-4",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        660,
+        300
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "fromEmail": "HelpDeskAI <helpdesk@helpdesk.local>",
+        "toEmail": "={{ $('Verify signature').first().json.data.requesterEmail }}",
+        "subject": "={{ \"How did we do? \" + $('Verify signature').first().json.data.title }}",
+        "emailFormat": "text",
+        "text": "=Hi,\n\nYour ticket \"{{ $('Verify signature').first().json.data.title }}\" was marked resolved.\nPlease open it and rate your support experience:\nhttp://localhost:8080/tickets/{{ $('Verify signature').first().json.data.ticketId }}\n\nIf the problem is not fixed, reply on the ticket.\n",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-5",
+      "name": "Log success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.API_BASE_URL }}/automation/logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"resolution-followup\", eventId: $(\"Verify signature\").first().json.eventId, ticketId: $(\"Verify signature\").first().json.data.ticketId, status: \"success\", startedAt: $(\"Verify signature\").first().json.startedAt, finishedAt: new Date().toISOString() }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-6",
+      "name": "Log failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.API_BASE_URL }}/automation/logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"resolution-followup\", eventId: $(\"Verify signature\").first().json.eventId, ticketId: $(\"Verify signature\").first().json.data.ticketId, status: \"failure\", errorSummary: (typeof $json.error === \"string\" ? $json.error : (($json.error && $json.error.message) || \"Unknown error\")).slice(0, 300), startedAt: $(\"Verify signature\").first().json.startedAt, finishedAt: new Date().toISOString() }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Log success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,128 @@
+name: helpdeskai
+
+# One-off jobs (schema push, demo seed) reuse the "tools" image, which holds the
+# whole workspace with dev dependencies.
+x-tools: &tools
+  build:
+    context: .
+    dockerfile: artifacts/api-server/Dockerfile
+    target: tools
+  image: helpdeskai-tools
+
+# The database is Neon. Put the full connection string in .env as NEON_DATABASE_URL
+# (it must end in ?sslmode=require).
+x-database-url: &database-url ${NEON_DATABASE_URL:?Set NEON_DATABASE_URL in .env}
+
+services:
+  # Creates or updates the tables, then exits. Safe to run on every start.
+  db-setup:
+    <<: *tools
+    command: pnpm --dir lib/db run push
+    environment:
+      DATABASE_URL: *database-url
+    restart: "no"
+
+  test-db:
+    image: pgvector/pgvector:pg16
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: helpdesk_test
+    ports:
+      - "127.0.0.1:55432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: artifacts/api-server/Dockerfile
+      target: runtime
+    image: helpdeskai-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: *database-url
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env (32+ characters)}
+      CORS_ORIGIN: http://localhost:${WEB_PORT:-8080}
+      TRUST_PROXY: "1"
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      LOG_LEVEL: debug
+      KB_MAX_DISTANCE: "0.40"
+      KB_MARGIN: "0.10"
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://host.docker.internal:8000}
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?Set AI_SERVICE_TOKEN in .env}
+      # n8n automation
+      AUTOMATION_WEBHOOK_URL: http://n8n:5678/webhook
+      AUTOMATION_WEBHOOK_SECRET: ${AUTOMATION_WEBHOOK_SECRET:?Set AUTOMATION_WEBHOOK_SECRET in .env}
+      AUTOMATION_API_KEY: ${AUTOMATION_API_KEY:?Set AUTOMATION_API_KEY in .env}
+      # Uncomment if your mailer reads these names (check your mail code first):
+      # SMTP_HOST: mailpit
+      # SMTP_PORT: "1025"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db-setup:
+        condition: service_completed_successfully
+    expose:
+      - "3001"
+
+  web:
+    build:
+      context: .
+      dockerfile: artifacts/helpdesk-ai/Dockerfile
+    image: helpdeskai-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Development-safe email: catches every message instead of sending it.
+  mailpit:
+    image: axllent/mailpit:latest   # pin a version tag before deploying
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"   # web UI
+      - "127.0.0.1:1025:1025"   # SMTP
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest   # pin a version tag before deploying
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in .env}
+      WEBHOOK_URL: http://localhost:5678/
+      N8N_SECURE_COOKIE: "false"            # dev over http only
+      GENERIC_TIMEZONE: Asia/Beirut
+      TZ: Asia/Beirut
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false" # lets workflows read $env.*
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto   # for HMAC verification
+      API_BASE_URL: http://api:3001/api
+      AUTOMATION_API_KEY: ${AUTOMATION_API_KEY:?Set AUTOMATION_API_KEY in .env}
+      AUTOMATION_WEBHOOK_SECRET: ${AUTOMATION_WEBHOOK_SECRET:?Set AUTOMATION_WEBHOOK_SECRET in .env}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - mailpit
+
+  # Optional demo data (never runs on a normal "up"):
+  #   docker compose --profile seed run --rm seed
+  seed:
+    <<: *tools
+    profiles: ["seed"]
+    command: pnpm --dir artifacts/api-server exec tsx src/seed.ts
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: *database-url
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-HelpdeskDemo26!}
+    depends_on:
+      db-setup:
+        condition: service_completed_successfully
+
+volumes:
+  n8n_data:

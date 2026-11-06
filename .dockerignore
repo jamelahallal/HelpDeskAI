@@ -1,0 +1,14 @@
+# Keep secrets, dependencies and build output out of every Docker build.
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.vscode
+.cache
+.local
+**/*.log
+*.zip

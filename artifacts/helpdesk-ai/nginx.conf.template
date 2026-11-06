@@ -1,0 +1,42 @@
+server {
+  listen 80;
+  server_name _;
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  gzip on;
+  gzip_min_length 1024;
+  gzip_types text/css application/javascript application/json image/svg+xml;
+
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header X-Frame-Options "DENY" always;
+  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+  # Docker's built-in DNS. Resolving at request time means nginx keeps working
+  # if the API container is restarted and gets a new address.
+  resolver 127.0.0.11 valid=10s;
+
+  # API calls go to the API container, so the browser only ever talks to one origin.
+  location /api/ {
+    set $api_upstream ${API_UPSTREAM};
+    proxy_pass $api_upstream;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  # Vite gives built files unique names, so they can be cached for a year.
+  location /assets/ {
+    expires 1y;
+    try_files $uri =404;
+  }
+
+  # Everything else is the single-page app: unknown paths fall back to index.html.
+  location / {
+    expires -1;
+    try_files $uri /index.html;
+  }
+}

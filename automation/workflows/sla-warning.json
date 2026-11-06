@@ -1,0 +1,193 @@
+{
+  "name": "HelpDeskAI - SLA warning",
+  "nodes": [
+    {
+      "id": "node-1",
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-2",
+      "name": "Get at-risk tickets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.API_BASE_URL }}/automation/at-risk-tickets",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-3",
+      "name": "Split tickets",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "fieldToSplitOut": "tickets",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-4",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        660,
+        300
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "fromEmail": "HelpDeskAI <helpdesk@helpdesk.local>",
+        "toEmail": "={{ $json.agentEmail }}",
+        "subject": "={{ \"[SLA warning] \" + $json.title }}",
+        "emailFormat": "text",
+        "text": "=Hi {{ $json.agentName }},\n\nTicket \"{{ $json.title }}\" ({{ $json.priority }}) has used 75% or more of its SLA window.\nSLA deadline: {{ $json.slaDeadline }}\n\nOpen it: http://localhost:8080/tickets/{{ $json.id }}\n",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-5",
+      "name": "Log success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.API_BASE_URL }}/automation/logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"sla-warning\", eventId: $(\"Split tickets\").item.json.id, ticketId: $(\"Split tickets\").item.json.id, status: \"success\", startedAt: new Date().toISOString(), finishedAt: new Date().toISOString() }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-6",
+      "name": "Log failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.API_BASE_URL }}/automation/logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: \"sla-warning\", eventId: $(\"Split tickets\").item.json.id, ticketId: $(\"Split tickets\").item.json.id, status: \"failure\", errorSummary: (typeof $json.error === \"string\" ? $json.error : (($json.error && $json.error.message) || \"Unknown error\")).slice(0, 300), startedAt: new Date().toISOString(), finishedAt: new Date().toISOString() }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Get at-risk tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get at-risk tickets": {
+      "main": [
+        [
+          {
+            "node": "Split tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split tickets": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Log success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,707 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.2.0
+  description: HelpDeskAI authentication, ticket management, and dashboard API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Account registration and authentication
+  - name: tickets
+    description: Support ticket operations
+  - name: dashboard
+    description: Role-aware dashboard summaries
+  - name: users
+    description: Agent directory
+  - name: admin
+    description: Administrator-only user and SLA management
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a requester account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Sign in to an account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Sign out of the current session
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the signed-in user
+      responses:
+        "200":
+          description: Current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /tickets:
+    get:
+      operationId: listTickets
+      tags: [tickets]
+      summary: List tickets visible to the signed-in user
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/TicketStatus"
+        - name: priority
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/TicketPriority"
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 120
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Matching tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+    post:
+      operationId: createTicket
+      tags: [tickets]
+      summary: Create a support ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketInput"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+  /tickets/{ticketId}:
+    get:
+      operationId: getTicket
+      tags: [tickets]
+      summary: Get ticket details and comments
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketDetail"
+  /tickets/{ticketId}/comments:
+    post:
+      operationId: createTicketComment
+      tags: [tickets]
+      summary: Add a comment or internal note
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketComment"
+  /tickets/{ticketId}/status:
+    patch:
+      operationId: updateTicketStatus
+      tags: [tickets]
+      summary: Update a ticket's status
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusUpdate"
+      responses:
+        "200":
+          description: Ticket updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+  /tickets/{ticketId}/assignment:
+    patch:
+      operationId: updateTicketAssignment
+      tags: [tickets]
+      summary: Assign or reassign a ticket
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentInput"
+      responses:
+        "200":
+          description: Ticket assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+  /tickets/{ticketId}/priority:
+    patch:
+      operationId: updateTicketPriority
+      tags: [tickets]
+      summary: Change ticket priority
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriorityUpdate"
+      responses:
+        "200":
+          description: Priority changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get role-aware ticket metrics
+      responses:
+        "200":
+          description: Dashboard counts and SLA metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /users/agents:
+    get:
+      operationId: listAgents
+      tags: [users]
+      summary: List agents for ticket assignment
+      responses:
+        "200":
+          description: Active agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: List all user accounts (admin only)
+      responses:
+        "200":
+          description: All accounts, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ManagedUser"
+    post:
+      operationId: adminCreateUser
+      tags: [admin]
+      summary: Create an account with any role (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagedUser"
+  /admin/users/{userId}:
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Change a user's name, role, active state, or reset their password (admin only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUserInput"
+      responses:
+        "200":
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagedUser"
+  /admin/sla-rules:
+    get:
+      operationId: adminListSlaRules
+      tags: [admin]
+      summary: List SLA response-hour rules for every priority (admin only)
+      responses:
+        "200":
+          description: One rule per priority, P1 to P4
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SlaRule"
+  /admin/sla-rules/{priority}:
+    put:
+      operationId: adminUpdateSlaRule
+      tags: [admin]
+      summary: Set the SLA response hours for one priority (admin only)
+      parameters:
+        - name: priority
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/TicketPriority"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SlaRuleInput"
+      responses:
+        "200":
+          description: Rule saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SlaRule"
+  /admin/automation-logs:
+    get:
+      operationId: adminListAutomationLogs
+      tags: [admin]
+      summary: Workflow run history and per-workflow success/failure counts (admin only)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/AutomationLogStatus"
+        - name: workflow
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 80
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Counts per workflow plus the most recent runs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationLogsResponse"
+security:
+  - cookieAuth: []
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: helpdesk_session
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    UserRole:
+      type: string
+      enum: [requester, agent, admin]
+    TicketStatus:
+      type: string
+      enum: [new, assigned, in_progress, resolved, closed]
+    TicketPriority:
+      type: string
+      enum: [P1, P2, P3, P4]
+    SlaState:
+      type: string
+      enum: [on_track, warning, breached, resolved]
+    User:
+      type: object
+      required: [id, fullName, email, role, initials]
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: "#/components/schemas/UserRole" }
+        initials: { type: string }
+    RegisterInput:
+      type: object
+      required: [fullName, email, password]
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 100 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 10, maxLength: 128 }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 1, maxLength: 128 }
+    AuthSession:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+    Message:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    Ticket:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - category
+        - priority
+        - status
+        - requester
+        - assignedAgent
+        - createdAt
+        - updatedAt
+        - slaDeadline
+        - resolvedAt
+        - commentsCount
+        - slaPercent
+        - slaState
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        priority: { $ref: "#/components/schemas/TicketPriority" }
+        status: { $ref: "#/components/schemas/TicketStatus" }
+        requester: { $ref: "#/components/schemas/User" }
+        assignedAgent:
+          oneOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        slaDeadline: { type: string, format: date-time }
+        resolvedAt: { type: ["string", "null"], format: date-time }
+        commentsCount: { type: integer, minimum: 0 }
+        slaPercent: { type: number, minimum: 0, maximum: 100 }
+        slaState: { $ref: "#/components/schemas/SlaState" }
+    TicketComment:
+      type: object
+      required: [id, ticketId, author, body, isInternal, createdAt]
+      properties:
+        id: { type: string }
+        ticketId: { type: string }
+        author: { $ref: "#/components/schemas/User" }
+        body: { type: string }
+        isInternal: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    TicketDetail:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - category
+        - priority
+        - status
+        - requester
+        - assignedAgent
+        - createdAt
+        - updatedAt
+        - slaDeadline
+        - resolvedAt
+        - commentsCount
+        - slaPercent
+        - slaState
+        - comments
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        priority: { $ref: "#/components/schemas/TicketPriority" }
+        status: { $ref: "#/components/schemas/TicketStatus" }
+        requester: { $ref: "#/components/schemas/User" }
+        assignedAgent:
+          oneOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        slaDeadline: { type: string, format: date-time }
+        resolvedAt: { type: ["string", "null"], format: date-time }
+        commentsCount: { type: integer, minimum: 0 }
+        slaPercent: { type: number, minimum: 0, maximum: 100 }
+        slaState: { $ref: "#/components/schemas/SlaState" }
+        comments:
+          type: array
+          items: { $ref: "#/components/schemas/TicketComment" }
+    TicketInput:
+      type: object
+      required: [title, description, category]
+      properties:
+        title: { type: string, minLength: 5, maxLength: 160 }
+        description: { type: string, minLength: 10, maxLength: 10000 }
+        category: { type: string, minLength: 2, maxLength: 80 }
+        priority: { $ref: "#/components/schemas/TicketPriority" }
+    CommentInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 5000 }
+        isInternal: { type: boolean, default: false }
+    StatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: "#/components/schemas/TicketStatus" }
+    AssignmentInput:
+      type: object
+      required: [agentId]
+      properties:
+        agentId: { type: ["string", "null"] }
+    PriorityUpdate:
+      type: object
+      required: [priority]
+      properties:
+        priority: { $ref: "#/components/schemas/TicketPriority" }
+    DashboardSummary:
+      type: object
+      required:
+        - total
+        - open
+        - assigned
+        - inProgress
+        - resolved
+        - slaWarning
+        - slaBreached
+        - averageResolutionHours
+        - byPriority
+        - byCategory
+      properties:
+        total: { type: integer, minimum: 0 }
+        open: { type: integer, minimum: 0 }
+        assigned: { type: integer, minimum: 0 }
+        inProgress: { type: integer, minimum: 0 }
+        resolved: { type: integer, minimum: 0 }
+        slaWarning: { type: integer, minimum: 0 }
+        slaBreached: { type: integer, minimum: 0 }
+        averageResolutionHours: { type: number, minimum: 0 }
+        byPriority:
+          type: array
+          items:
+            type: object
+            required: [priority, count]
+            properties:
+              priority: { $ref: "#/components/schemas/TicketPriority" }
+              count: { type: integer, minimum: 0 }
+        byCategory:
+          type: array
+          items:
+            type: object
+            required: [category, count]
+            properties:
+              category: { type: string }
+              count: { type: integer, minimum: 0 }
+
+    ManagedUser:
+      type: object
+      required: [id, fullName, email, role, initials, isActive, createdAt]
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: "#/components/schemas/UserRole" }
+        initials: { type: string }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    AdminCreateUserInput:
+      type: object
+      required: [fullName, email, password, role]
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 100 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 10, maxLength: 128 }
+        role: { $ref: "#/components/schemas/UserRole" }
+    AdminUpdateUserInput:
+      type: object
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 100 }
+        role: { $ref: "#/components/schemas/UserRole" }
+        isActive: { type: boolean }
+        password: { type: string, minLength: 10, maxLength: 128 }
+    SlaRule:
+      type: object
+      required: [priority, responseHours]
+      properties:
+        priority: { $ref: "#/components/schemas/TicketPriority" }
+        responseHours: { type: integer, minimum: 1, maximum: 720 }
+        updatedAt: { type: string, format: date-time }
+    SlaRuleInput:
+      type: object
+      required: [responseHours]
+      properties:
+        responseHours: { type: integer, minimum: 1, maximum: 720 }
+    AutomationLogStatus:
+      type: string
+      enum: [success, failure]
+    AutomationLog:
+      type: object
+      required: [id, workflow, eventId, ticketId, ticketTitle, status, errorSummary, startedAt, finishedAt, createdAt]
+      properties:
+        id: { type: string }
+        workflow: { type: string }
+        eventId: { type: string }
+        ticketId: { type: ["string", "null"] }
+        ticketTitle: { type: ["string", "null"] }
+        status: { $ref: "#/components/schemas/AutomationLogStatus" }
+        errorSummary: { type: ["string", "null"] }
+        startedAt: { type: ["string", "null"], format: date-time }
+        finishedAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+    AutomationWorkflowSummary:
+      type: object
+      required: [workflow, success, failure]
+      properties:
+        workflow: { type: string }
+        success: { type: integer, minimum: 0 }
+        failure: { type: integer, minimum: 0 }
+    AutomationLogsResponse:
+      type: object
+      required: [summary, logs]
+      properties:
+        summary:
+          type: array
+          items: { $ref: "#/components/schemas/AutomationWorkflowSummary" }
+        logs:
+          type: array
+          items: { $ref: "#/components/schemas/AutomationLog" }
