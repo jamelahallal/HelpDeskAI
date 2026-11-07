@@ -58,9 +58,10 @@ services:
       AUTOMATION_WEBHOOK_URL: http://n8n:5678/webhook
       AUTOMATION_WEBHOOK_SECRET: ${AUTOMATION_WEBHOOK_SECRET:?Set AUTOMATION_WEBHOOK_SECRET in .env}
       AUTOMATION_API_KEY: ${AUTOMATION_API_KEY:?Set AUTOMATION_API_KEY in .env}
-      # Uncomment if your mailer reads these names (check your mail code first):
-      # SMTP_HOST: mailpit
-      # SMTP_PORT: "1025"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      MAIL_FROM: "HelpDeskAI <no-reply@helpdesk.local>"
+      APP_URL: http://localhost:${WEB_PORT:-8080}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

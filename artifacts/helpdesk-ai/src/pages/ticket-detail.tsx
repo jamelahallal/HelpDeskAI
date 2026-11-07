@@ -12,6 +12,7 @@ import { Avatar, Empty, PriorityBadge, Problem, StatusBadge } from '@/components
 import { AiAnalysisCard, type AiAnalysis } from '@/components/ai-analysis-card';
 import { ago, dateLabel, titleCase } from '@/lib/format';
 import { priorities, statusText } from '@/lib/ticket-constants';
+import { FeedbackCard } from '@/components/feedback-card';
 
 export function TicketDetailPage({ user }: { user: User }) {
   const [, params] = useRoute('/tickets/:ticketId');
@@ -79,6 +80,7 @@ export function TicketDetailPage({ user }: { user: User }) {
           onApplyPriority={mutatePriority}
           applying={updatePriority.isPending}
         />}
+        <FeedbackCard ticketId={ticket.id} status={ticket.status} role={user.role} />
         <section className="panel comments"><div className="panel-head"><div><div className="panel-title">Updates & notes</div><div className="panel-kicker">A shared record of what’s happening</div></div><span className="badge" style={{ background: '#f0f3f4', color: '#687985' }}>{ticket.comments.length}</span></div>
           <div style={{ padding: '0 21px' }}>
             {!ticket.comments.length ? <Empty title="First update starts here" detail="Add context or a progress note to keep everyone aligned." /> : [...ticket.comments].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((comment) => <article className="comment" key={comment.id} data-testid={`comment-${comment.id}`}><div className="comment-head"><Avatar user={comment.author} /><span className="comment-name">{comment.author.fullName}</span>{comment.isInternal && <span className="internal-label">Internal note</span>}<span className="comment-time">{ago(comment.createdAt)}</span></div><p className="comment-body">{comment.body}</p></article>)}

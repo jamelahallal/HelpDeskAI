@@ -320,6 +320,104 @@ export interface AutomationLogsResponse {
   logs: AutomationLog[];
 }
 
+export interface FeedbackInput {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @maxLength 1000 */
+  comment?: string;
+}
+
+export interface TicketFeedback {
+  id: string;
+  ticketId: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @nullable */
+  comment: string | null;
+  createdAt: string;
+}
+
+export interface TicketFeedbackResponse {
+  feedback: TicketFeedback | null;
+}
+
+export interface ForgotPasswordInput {
+  /** @maxLength 254 */
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  /**
+     * @minLength 20
+     * @maxLength 200
+     */
+  token: string;
+  /**
+     * @minLength 10
+     * @maxLength 128
+     */
+  password: string;
+}
+
+export interface KbArticle {
+  id: string;
+  title: string;
+  body: string;
+  category: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KbArticleInput {
+  /**
+     * @minLength 3
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @minLength 10
+     * @maxLength 20000
+     */
+  body: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  category: string;
+  isPublished?: boolean;
+}
+
+export interface KbArticleUpdate {
+  /**
+     * @minLength 3
+     * @maxLength 200
+     */
+  title?: string;
+  /**
+     * @minLength 10
+     * @maxLength 20000
+     */
+  body?: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  category?: string;
+  isPublished?: boolean;
+}
+
+export interface KbArticleResult {
+  article: KbArticle;
+  embedded: boolean;
+}
+
 export type ListTicketsParams = {
 status?: TicketStatus;
 priority?: TicketPriority;

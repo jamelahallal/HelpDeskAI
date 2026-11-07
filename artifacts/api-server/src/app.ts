@@ -6,6 +6,7 @@ import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { allowedOrigins, originCheck } from "./middlewares/csrf";
 
 const app: Express = express();
 app.disable("x-powered-by");
@@ -39,12 +40,7 @@ app.use(
     },
   }),
 );
-const allowedOrigins = new Set(
-  (process.env.CORS_ORIGIN ?? "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean),
-);
+
 app.use(cors({
   credentials: true,
   origin(origin, callback) {
@@ -63,6 +59,7 @@ app.use(
     standardHeaders: "draft-8",
     legacyHeaders: false,
   }),
+  originCheck,
   router,
 );
 

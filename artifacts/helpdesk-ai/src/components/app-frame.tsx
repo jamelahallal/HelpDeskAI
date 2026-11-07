@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, Headphones, LayoutDashboard, LogOut, ShieldCheck, Ticket as TicketIcon } from 'lucide-react';
+import { ArrowRight, BookOpen, Headphones, LayoutDashboard, LogOut, ShieldCheck, Ticket as TicketIcon } from 'lucide-react';
 import { useLogoutUser } from '@workspace/api-client-react';
 import type { User } from '@workspace/api-client-react';
 import { Avatar } from '@/components/common';
 
 export function AppFrame({ user, children }: { user: User; children: React.ReactNode }) {
-  const [, navigate] = useLocation();
+  const [path, navigate] = useLocation();
+  const isActive = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
   const logout = useLogoutUser();
   const client = useQueryClient();
   const [error, setError] = useState('');
@@ -15,6 +17,7 @@ export function AppFrame({ user, children }: { user: User; children: React.React
   const nav = [
     { href: '/', label: 'Overview', icon: LayoutDashboard },
     { href: '/tickets', label: 'Tickets', icon: TicketIcon },
+    { href: '/knowledge-base', label: 'Knowledge base', icon: BookOpen },
     ...(user.role === 'admin' ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
   ];
   return <div className="app-shell">
@@ -22,7 +25,7 @@ export function AppFrame({ user, children }: { user: User; children: React.React
       <Link href="/" className="brand" data-testid="link-brand"><span className="brand-mark"><Headphones size={17} /></span><span>helpdesk<span style={{ color: '#54c9b0' }}>ai</span></span></Link>
       <div className="nav-wrap">
         <div className="nav-label">Workspace</div>
-        <nav className="nav-list">{nav.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`nav-item ${location.pathname === href || (href === '/tickets' && location.pathname.startsWith('/tickets/')) ? 'active' : ''}`} data-testid={`link-nav-${label.toLowerCase()}`}><Icon size={17} /><span>{label}</span></Link>)}</nav>
+        <nav className="nav-list">{nav.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`nav-item ${isActive(href) ? 'active' : ''}`} data-testid={`link-nav-${label.toLowerCase().replace(/\s+/g, '-')}`}><Icon size={17} /><span>{label}</span></Link>)}</nav>
       </div>
       <div className="side-foot">
         <div className="user-mini"><Avatar user={user} /><div><div className="user-name" data-testid="text-current-user">{user.fullName}</div><div className="user-role">{user.role}</div></div></div>

@@ -93,6 +93,43 @@ export const GetCurrentUserResponse = zod.object({
 
 
 /**
+ * @summary Request a password reset email
+ */
+export const forgotPasswordBodyEmailMax = 254;
+
+
+
+export const ForgotPasswordBody = zod.object({
+  "email": zod.string().email().max(forgotPasswordBodyEmailMax)
+})
+
+export const ForgotPasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Set a new password with a reset token
+ */
+export const resetPasswordBodyTokenMin = 20;
+export const resetPasswordBodyTokenMax = 200;
+
+export const resetPasswordBodyPasswordMin = 10;
+export const resetPasswordBodyPasswordMax = 128;
+
+
+
+export const ResetPasswordBody = zod.object({
+  "token": zod.string().min(resetPasswordBodyTokenMin).max(resetPasswordBodyTokenMax),
+  "password": zod.string().min(resetPasswordBodyPasswordMin).max(resetPasswordBodyPasswordMax)
+})
+
+export const ResetPasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary List tickets visible to the signed-in user
  */
 export const listTicketsQuerySearchMax = 120;
@@ -446,6 +483,59 @@ export const UpdateTicketPriorityResponse = zod.object({
 
 
 /**
+ * @summary Get the satisfaction rating for a ticket, if one was given
+ */
+export const GetTicketFeedbackParams = zod.object({
+  "ticketId": zod.coerce.string()
+})
+
+export const getTicketFeedbackResponseFeedbackOneRatingMax = 5;
+
+
+
+export const GetTicketFeedbackResponse = zod.object({
+  "feedback": zod.union([zod.object({
+  "id": zod.string(),
+  "ticketId": zod.string(),
+  "rating": zod.number().int().min(1).max(getTicketFeedbackResponseFeedbackOneRatingMax),
+  "comment": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Rate a resolved ticket (requester only, once)
+ */
+export const SubmitTicketFeedbackParams = zod.object({
+  "ticketId": zod.coerce.string()
+})
+
+export const submitTicketFeedbackBodyRatingMax = 5;
+
+export const submitTicketFeedbackBodyCommentMax = 1000;
+
+
+
+export const SubmitTicketFeedbackBody = zod.object({
+  "rating": zod.number().int().min(1).max(submitTicketFeedbackBodyRatingMax),
+  "comment": zod.string().max(submitTicketFeedbackBodyCommentMax).optional()
+})
+
+export const submitTicketFeedbackResponseRatingMax = 5;
+
+
+
+export const SubmitTicketFeedbackResponse = zod.object({
+  "id": zod.string(),
+  "ticketId": zod.string(),
+  "rating": zod.number().int().min(1).max(submitTicketFeedbackResponseRatingMax),
+  "comment": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Get role-aware ticket metrics
  */
 export const getDashboardSummaryResponseTotalMin = 0;
@@ -663,6 +753,95 @@ export const AdminListAutomationLogsResponse = zod.object({
   "finishedAt": zod.coerce.date().nullable(),
   "createdAt": zod.coerce.date()
 }))
+})
+
+
+/**
+ * @summary List knowledge-base articles (published only, except for admins)
+ */
+export const ListKbArticlesResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "category": zod.string(),
+  "isPublished": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListKbArticlesResponse = zod.array(ListKbArticlesResponseItem)
+
+
+/**
+ * @summary Create an article and embed it for AI search (admin only)
+ */
+export const adminCreateKbArticleBodyTitleMin = 3;
+export const adminCreateKbArticleBodyTitleMax = 200;
+
+export const adminCreateKbArticleBodyBodyMin = 10;
+export const adminCreateKbArticleBodyBodyMax = 20000;
+
+export const adminCreateKbArticleBodyCategoryMin = 2;
+export const adminCreateKbArticleBodyCategoryMax = 80;
+
+
+
+export const AdminCreateKbArticleBody = zod.object({
+  "title": zod.string().min(adminCreateKbArticleBodyTitleMin).max(adminCreateKbArticleBodyTitleMax),
+  "body": zod.string().min(adminCreateKbArticleBodyBodyMin).max(adminCreateKbArticleBodyBodyMax),
+  "category": zod.string().min(adminCreateKbArticleBodyCategoryMin).max(adminCreateKbArticleBodyCategoryMax),
+  "isPublished": zod.boolean().optional()
+})
+
+export const AdminCreateKbArticleResponse = zod.object({
+  "article": zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "category": zod.string(),
+  "isPublished": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "embedded": zod.boolean()
+})
+
+
+/**
+ * @summary Edit, publish or unpublish an article (admin only)
+ */
+export const AdminUpdateKbArticleParams = zod.object({
+  "articleId": zod.coerce.string()
+})
+
+export const adminUpdateKbArticleBodyTitleMin = 3;
+export const adminUpdateKbArticleBodyTitleMax = 200;
+
+export const adminUpdateKbArticleBodyBodyMin = 10;
+export const adminUpdateKbArticleBodyBodyMax = 20000;
+
+export const adminUpdateKbArticleBodyCategoryMin = 2;
+export const adminUpdateKbArticleBodyCategoryMax = 80;
+
+
+
+export const AdminUpdateKbArticleBody = zod.object({
+  "title": zod.string().min(adminUpdateKbArticleBodyTitleMin).max(adminUpdateKbArticleBodyTitleMax).optional(),
+  "body": zod.string().min(adminUpdateKbArticleBodyBodyMin).max(adminUpdateKbArticleBodyBodyMax).optional(),
+  "category": zod.string().min(adminUpdateKbArticleBodyCategoryMin).max(adminUpdateKbArticleBodyCategoryMax).optional(),
+  "isPublished": zod.boolean().optional()
+})
+
+export const AdminUpdateKbArticleResponse = zod.object({
+  "article": zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "category": zod.string(),
+  "isPublished": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "embedded": zod.boolean()
 })
 
 

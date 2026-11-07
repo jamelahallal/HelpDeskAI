@@ -1,60 +1,80 @@
 # HelpDeskAI
 
-HelpDeskAI is a cloud-native IT helpdesk portfolio project. Requesters submit and follow support issues; agents and admins manage ownership, progress, priority, and service-level commitments.
+HelpDeskAI is an IT helpdesk ticketing system built as a portfolio project. Requesters log support issues, agents and admins work them against SLA deadlines, an AI service suggests how to handle each ticket using a searchable knowledge base, and n8n workflows send the notifications and escalations.
 
-## Current phase
+The AI never acts on its own: every suggestion is shown to an agent, who decides whether to use it.
 
-**Phase 1 is implemented:** PostgreSQL-backed accounts and tickets, role-based access, SLA deadlines, comments and internal notes, assignment history, audit events, dashboard summaries, and a working React interface.
+## What it does
 
-AI ticket analysis, the knowledge base, n8n workflows, Docker, AWS, Terraform, CI/CD, and CloudWatch are documented as later phases. They are not represented as working features yet.
+- **Tickets.** Requesters register, create tickets, follow progress and close their own resolved tickets. Agents and admins assign, prioritise and progress them. Internal notes are hidden from requesters.
+- **SLA tracking.** P1 1 hour, P2 4 hours, P3 8 hours, P4 24 hours (editable by an admin). A ticket at 75% of its window is *at risk*; past the deadline it is *breached*.
+- **AI analysis.** When a ticket is created, the API asks a separate FastAPI service for a category, priority, urgency, summary, suggested team and a draft reply. Agents see this on the ticket and can copy the reply, use it as an update, or apply the suggested priority. Nothing is applied automatically.
+- **Knowledge-base retrieval (RAG).** Articles are embedded and stored with pgvector. For each ticket the API runs a hybrid search (keyword plus vector similarity, merged with Reciprocal Rank Fusion) and passes only relevant articles to the AI service. Distance and margin cut-offs stop weak matches from being used.
+- **Automation (n8n).** Four workflows: new ticket, SLA warning, resolution follow-up and P1 escalation. Every run is recorded in `automation_logs` and visible to admins on the Automation tab.
+- **Admin area.** Create users, change roles, deactivate or reactivate accounts, reset passwords, edit SLA hours, and watch workflow successes and failures.
+- **Resilience.** If the AI service is down or returns bad output, the ticket is still created and the failure is logged.
+
+Ticket lifecycle: `new → assigned → in_progress → resolved → closed`. Assigning a ticket moves it to `assigned`. Skipping a step returns `409`.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Browser[React + Vite] -->|same-origin /api| API[Express API]
-  API --> Auth[JWT in HttpOnly cookie]
-  API --> DB[(PostgreSQL)]
-  API --> SLA[SLA calculation]
-  API --> Audit[Ticket audit history]
+  Browser[React app] -->|"/api"| Web[nginx]
+  Web --> API[Express API]
+  API --> DB[("PostgreSQL + pgvector")]
+  API -->|"embed / analyze"| AI[FastAPI AI service]
+  API -->|"signed webhooks"| N8N[n8n]
+  N8N -->|"logs, at-risk tickets"| API
+  N8N --> Mail[Mailpit in dev / SMTP provider in production]
 ```
 
-The main application is a modular monolith. The OpenAPI document is the API contract; generated Zod schemas validate server inputs and outputs, and generated React Query hooks connect the frontend.
-
-See [ARCHITECTURE.md](ARCHITECTURE.md), [SECURITY.md](SECURITY.md), [DEPLOYMENT.md](DEPLOYMENT.md), [AI.md](AI.md), and [N8N_WORKFLOWS.md](N8N_WORKFLOWS.md).
-
-## Phase 1 features
-
-- Requester registration and sign-in; agent and admin roles for seeded demo users.
-- HttpOnly JWT sessions, password hashing, protected routes, and role-aware ticket visibility.
-- Ticket creation, search and filtering, detail pages, comments, and agent-only internal notes.
-- Agent assignment and reassignment, priority updates, and linear ticket status transitions.
-- Priority SLAs: P1 1 hour, P2 4 hours, P3 8 hours, P4 24 hours. Tickets at 75% elapsed are marked at risk; expired deadlines are marked breached.
-- Requester dashboard, agent queue, operational summary, and auditable ticket changes.
-- Responsive UI with loading, empty, error, and mutation feedback states.
-
-Ticket lifecycle: `new → assigned → in_progress → resolved → closed`. Requesters can close their own resolved tickets.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the data model and request flow, [AI.md](AI.md) for the AI and retrieval design, [N8N_WORKFLOWS.md](N8N_WORKFLOWS.md) for the workflows, [SECURITY.md](SECURITY.md) and [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Stack
 
-- React, Vite, TypeScript, Wouter, TanStack Query
-- Node.js, Express 5, TypeScript
-- PostgreSQL, Drizzle ORM
-- OpenAPI, Orval-generated client hooks and Zod schemas
-- Pino structured logs, Helmet, express-rate-limit
+- **Frontend:** React, Vite, TypeScript, Wouter, TanStack Query, served by nginx
+- **API:** Node.js, Express 5, TypeScript, Pino, Helmet, express-rate-limit
+- **Data:** PostgreSQL (Neon) with pgvector, Drizzle ORM
+- **Contract:** OpenAPI with Orval-generated React Query hooks and Zod schemas
+- **AI:** Python, FastAPI, 384-dimension `bge-small` embeddings, swappable text-model provider
+- **Automation:** n8n, Mailpit for development-safe email
+- **Packaging:** Docker and Docker Compose, pnpm workspaces
+- **Tests:** Node test runner (API), Vitest and Testing Library (frontend)
 
-## Run in Replit
+## Run it locally
 
-The API and web preview workflows are configured for this project. To initialize an empty development database, run:
+You need Docker Desktop, pnpm and a Postgres database with the pgvector extension (a free Neon project works).
 
-```bash
-pnpm --filter @workspace/db run push
-pnpm --filter @workspace/api-server run seed
-```
+1. Copy `.env.example` to `.env` and fill it in. Required values include `NEON_DATABASE_URL` (ending in `?sslmode=require`), `SESSION_SECRET` (32+ characters), `AI_SERVICE_TOKEN`, `AUTOMATION_WEBHOOK_SECRET`, `AUTOMATION_API_KEY` and `N8N_ENCRYPTION_KEY`. Generate each secret with:
 
-The seed command is development-only. It refuses to run when `NODE_ENV=production`.
+   ```powershell
+   -join (1..64 | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) })
+   ```
 
-Demo users (password for all accounts: `HelpdeskDemo26!`):
+2. Start the stack. The first run creates the database tables automatically:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. Optional demo data (development only):
+
+   ```bash
+   docker compose --profile seed run --rm seed
+   ```
+
+4. Run the AI service on port 8000 of your machine. The API reaches it at `host.docker.internal:8000`. See [AI.md](AI.md).
+
+5. Set up n8n once at http://localhost:5678: create the owner account, import each file in `automation/workflows/` as its own workflow, add an SMTP credential (host `mailpit`, port `1025`, no authentication, SSL off), then publish all four.
+
+| What | Where |
+| --- | --- |
+| The app | http://localhost:8080 |
+| Caught emails (Mailpit) | http://localhost:8025 |
+| n8n | http://localhost:5678 |
+
+Demo users (password `HelpdeskDemo26!`, overridable with `DEMO_PASSWORD`):
 
 | Role | Email |
 | --- | --- |
@@ -62,51 +82,78 @@ Demo users (password for all accounts: `HelpdeskDemo26!`):
 | Agent | `agent@helpdesk.local` |
 | Admin | `admin@helpdesk.local` |
 
-Do not use these demo accounts or their password in production.
+Never use the demo accounts or password in production.
 
-## Environment
+## Configuration
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `DATABASE_URL` | Yes | PostgreSQL connection supplied by the workspace |
-| `SESSION_SECRET` | Yes | At least 32 characters; signs session JWTs |
-| `CORS_ORIGIN` | No | Comma-separated allowlist for a separately hosted frontend |
-| `DEMO_PASSWORD` | No | Overrides the development seed password |
-| `LOG_LEVEL` | No | Pino log level; defaults to `info` |
+| Variable | Purpose |
+| --- | --- |
+| `NEON_DATABASE_URL` | Database connection (passed to the containers as `DATABASE_URL`) |
+| `SESSION_SECRET` | Signs session JWTs; 32+ characters |
+| `CORS_ORIGIN` | Allowed browser origin; set by Compose from `WEB_PORT` |
+| `TRUST_PROXY` | Number of proxies in front of the API, so client IPs and rate limits are correct |
+| `COOKIE_SECURE` | `true` when served over HTTPS |
+| `AI_SERVICE_URL`, `AI_SERVICE_TOKEN` | Where the AI service is and the shared token it expects |
+| `KB_MAX_DISTANCE`, `KB_MARGIN` | Retrieval cut-offs (defaults `0.40` and `0.10`) |
+| `AUTOMATION_WEBHOOK_SECRET` | Signs events sent from the API to n8n |
+| `AUTOMATION_API_KEY` | Key n8n sends when calling the API back |
+| `N8N_ENCRYPTION_KEY` | Encrypts n8n's stored credentials |
+| `WEB_PORT`, `LOG_LEVEL`, `DEMO_PASSWORD` | Web port (default 8080), log level, seed password |
 
-Keep secrets in Replit Secrets or the deployment platform's secret store. Never commit `.env` files, JWT signing secrets, or cloud credentials.
+Never commit `.env`. Keep secrets in the host's secret store.
 
 ## API overview
 
-- `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`
-- `GET /api/tickets`, `POST /api/tickets`, `GET /api/tickets/{ticketId}`
-- `POST /api/tickets/{ticketId}/comments`
-- `PATCH /api/tickets/{ticketId}/status`
-- `PATCH /api/tickets/{ticketId}/assignment`
-- `PATCH /api/tickets/{ticketId}/priority`
-- `GET /api/dashboard/summary`, `GET /api/users/agents`
+- Auth: `POST /api/auth/register`, `login`, `logout`; `GET /api/auth/me`
+- Tickets: `GET` and `POST /api/tickets`; `GET /api/tickets/{id}`; `POST …/comments`; `PATCH …/status`, `…/assignment`, `…/priority`
+- Dashboard and directory: `GET /api/dashboard/summary`, `GET /api/users/agents`
+- Admin (admin role only): `GET` and `POST /api/admin/users`, `PATCH /api/admin/users/{id}`, `GET /api/admin/sla-rules`, `PUT /api/admin/sla-rules/{priority}`, `GET /api/admin/automation-logs`
+- Automation (shared key, used by n8n): `GET /api/automation/at-risk-tickets`, `POST /api/automation/logs`
+- Health: `GET /api/healthz`
 
-Contract source: `lib/api-spec/openapi.yaml`. After changing it, regenerate types and hooks:
+The contract lives in `lib/api-spec/openapi.yaml`. After changing it, regenerate the client and schemas:
 
 ```bash
 pnpm --filter @workspace/api-spec run codegen
 ```
 
-## Validation
+## Tests
 
 ```bash
 pnpm run typecheck
 pnpm --filter @workspace/api-server run test:unit
+pnpm --filter @workspace/helpdesk-ai run test
 ```
 
-The unit suite covers priority-based SLA deadlines and states, role-based ticket visibility, status transitions, and assignment behavior. The API startup logs use structured Pino output. The database schema is managed in `lib/db/src/schema/`; `drizzle-kit push` updates the development database.
+The API integration tests run against a throwaway Postgres container, never your real database. Start it once, then run the suite:
+
+```powershell
+docker compose --profile test up -d test-db
+docker compose exec test-db psql -U test -d helpdesk_test -c "CREATE EXTENSION IF NOT EXISTS vector"
+docker compose run --rm -e DATABASE_URL=postgres://test:test@test-db:5432/helpdesk_test db-setup
+pnpm --filter @workspace/api-server run test
+```
+
+They cover sign-up and sign-in, role-based access, ticket creation, assignment and the status lifecycle. The frontend tests cover creating a ticket and updating its status.
+
+## Project layout
+
+```
+artifacts/api-server/    Express API, routes, tests
+artifacts/helpdesk-ai/   React app (pages/, components/, lib/)
+lib/db/                  Drizzle schema
+lib/api-spec/            OpenAPI contract
+lib/api-zod/             Generated Zod schemas
+lib/api-client-react/    Generated React Query hooks
+automation/workflows/    n8n workflow exports
+```
 
 ## Roadmap
 
-1. **Core app (current):** auth, roles, tickets, SLA calculations, audit history, and first dashboard.
-2. **Docker:** containerize the web app, API, AI service, and database-backed local setup.
-3. **AI and knowledge:** separate FastAPI analysis service, article retrieval, human-approved recommendations.
-4. **Automation:** real n8n workflows for new tickets, SLA warnings, resolutions, and escalation.
-5. **Cloud and delivery:** AWS architecture, Terraform, GitHub Actions, monitoring, and security hardening.
+Done: core app, Docker, AI service, RAG, n8n automation with Mailpit, admin automation view, backend and frontend tests.
 
-Suggested phase-one commit: `feat: build HelpDeskAI ticketing foundation`
+Next:
+
+1. **CI:** GitHub Actions running typecheck, tests, builds and Docker builds.
+2. **Free deployment:** Docker Compose on a free virtual machine with automatic HTTPS, then a deploy workflow that only runs after CI passes. See [DEPLOYMENT.md](DEPLOYMENT.md).
+3. **Hardening:** CSRF protection, password recovery, email verification and shared rate-limit storage. See [SECURITY.md](SECURITY.md).

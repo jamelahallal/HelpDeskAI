@@ -155,7 +155,7 @@ const AI_URL = process.env.AI_SERVICE_URL ?? "http://host.docker.internal:8000";
 const QUERY_PREFIX = "Represent this sentence for searching relevant passages: ";
 
 /** Ask the Python AI service to embed texts (bge-small, 384 dimensions). */
-async function embedTexts(texts: string[]): Promise<number[][]> {
+export async function embedTexts(texts: string[]): Promise<number[][]> {
   const r = await fetch(`${AI_URL}/embed`, {
     method: "POST",
     headers: {

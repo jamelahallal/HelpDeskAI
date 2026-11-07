@@ -3,3 +3,5 @@ export * from "./tickets";
 export * from "./ticketAiAnalysis"; 
 export * from "./kbArticles";
 export * from "./automation-logs";
+export * from "./ticketFeedback";
+export * from "./passwordResetTokens";

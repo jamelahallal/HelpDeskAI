@@ -9,7 +9,7 @@
     "start": "node --env-file=.env --enable-source-maps ./dist/index.mjs",
     "seed": "tsx --env-file=.env src/seed.ts",
     "test:unit": "tsx --test src/lib/ticket-rules.test.ts src/lib/admin-rules.test.ts",
-    "test": "tsx --env-file=.env.test --test --test-concurrency=1 src/test/auth.test.ts src/test/authorization.test.ts src/test/tickets.test.ts",
+    "test": "tsx --env-file=.env.test --test --test-concurrency=1 src/test/auth.test.ts src/test/authorization.test.ts src/test/tickets.test.ts src/test/feedback.test.ts src/test/csrf.test.ts src/test/password-reset.test.ts src/test/kb.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
     "jose": "^6.2.13",
+    "nodemailer": "^10.3.1",
     "pino": "^9.14.0",
     "pino-http": "^10.5.0",
     "zod": "catalog:"
@@ -32,6 +33,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "catalog:",
+    "@types/nodemailer": "^8.0.2",
     "esbuild": "0.28.2",
     "esbuild-plugin-pino": "^2.3.3",
     "pino-pretty": "^13.2.0",

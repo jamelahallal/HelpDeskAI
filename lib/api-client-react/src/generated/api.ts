@@ -28,19 +28,28 @@ import type {
   AutomationLogsResponse,
   CommentInput,
   DashboardSummary,
+  FeedbackInput,
+  ForgotPasswordInput,
   HealthStatus,
+  KbArticle,
+  KbArticleInput,
+  KbArticleResult,
+  KbArticleUpdate,
   ListTicketsParams,
   LoginInput,
   ManagedUser,
   Message,
   PriorityUpdate,
   RegisterInput,
+  ResetPasswordInput,
   SlaRule,
   SlaRuleInput,
   StatusUpdate,
   Ticket,
   TicketComment,
   TicketDetail,
+  TicketFeedback,
+  TicketFeedbackResponse,
   TicketInput,
   TicketPriority,
   User
@@ -477,6 +486,182 @@ export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUs
 
 
 
+
+export const getForgotPasswordUrl = () => {
+
+
+
+
+  return `/api/auth/forgot-password`
+}
+
+/**
+ * @summary Request a password reset email
+ */
+export const forgotPassword = async (forgotPasswordInput: ForgotPasswordInput, options?: Parameters<typeof customFetch>[1]): Promise<Message> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Message>(getForgotPasswordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(forgotPasswordInput)
+  }
+);}
+
+
+
+
+
+export const getForgotPasswordMutationKey = () => ['forgotPassword'] as const;
+
+export const getForgotPasswordMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,ForgotPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,ForgotPasswordMutationVariables, TContext> => {
+
+const mutationKey = getForgotPasswordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof forgotPassword>>, ForgotPasswordMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  forgotPassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof forgotPassword>>>
+    export type ForgotPasswordMutationBody = BodyType<ForgotPasswordInput>
+    export type ForgotPasswordMutationError = ErrorType<unknown>
+    export type ForgotPasswordMutationVariables = {data: BodyType<ForgotPasswordInput>}
+
+    /**
+ * @summary Request a password reset email
+ */
+export const useForgotPassword = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,ForgotPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof forgotPassword>>,
+        TError,
+        ForgotPasswordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getForgotPasswordMutationOptions(options));
+    }
+
+export const getResetPasswordUrl = () => {
+
+
+
+
+  return `/api/auth/reset-password`
+}
+
+/**
+ * @summary Set a new password with a reset token
+ */
+export const resetPassword = async (resetPasswordInput: ResetPasswordInput, options?: Parameters<typeof customFetch>[1]): Promise<Message> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Message>(getResetPasswordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(resetPasswordInput)
+  }
+);}
+
+
+
+
+
+export const getResetPasswordMutationKey = () => ['resetPassword'] as const;
+
+export const getResetPasswordMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,ResetPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,ResetPasswordMutationVariables, TContext> => {
+
+const mutationKey = getResetPasswordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetPassword>>, ResetPasswordMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  resetPassword(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetPassword>>>
+    export type ResetPasswordMutationBody = BodyType<ResetPasswordInput>
+    export type ResetPasswordMutationError = ErrorType<unknown>
+    export type ResetPasswordMutationVariables = {data: BodyType<ResetPasswordInput>}
+
+    /**
+ * @summary Set a new password with a reset token
+ */
+export const useResetPassword = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,ResetPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resetPassword>>,
+        TError,
+        ResetPasswordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResetPasswordMutationOptions(options));
+    }
 
 export const getListTicketsUrl = (params?: ListTicketsParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -1081,6 +1266,172 @@ export const useUpdateTicketPriority = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateTicketPriorityMutationOptions(options));
+    }
+
+export const getGetTicketFeedbackUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/tickets/${ticketId}/feedback`
+}
+
+/**
+ * @summary Get the satisfaction rating for a ticket, if one was given
+ */
+export const getTicketFeedback = async (ticketId: string, options?: Parameters<typeof customFetch>[1]): Promise<TicketFeedbackResponse> => {
+
+  return customFetch<TicketFeedbackResponse>(getGetTicketFeedbackUrl(ticketId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTicketFeedbackQueryKey = (ticketId: string,) => {
+    return [
+    `/api/tickets/${ticketId}/feedback`
+    ] as const;
+    }
+
+
+export const getGetTicketFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof getTicketFeedback>>, TError = ErrorType<unknown>>(ticketId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTicketFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTicketFeedbackQueryKey(ticketId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTicketFeedback>>> = ({ signal }) => getTicketFeedback(ticketId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: ticketId !== null && ticketId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTicketFeedback>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTicketFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof getTicketFeedback>>>
+export type GetTicketFeedbackQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the satisfaction rating for a ticket, if one was given
+ */
+
+export function useGetTicketFeedback<TData = Awaited<ReturnType<typeof getTicketFeedback>>, TError = ErrorType<unknown>>(
+ ticketId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTicketFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTicketFeedbackQueryOptions(ticketId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSubmitTicketFeedbackUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/tickets/${ticketId}/feedback`
+}
+
+/**
+ * @summary Rate a resolved ticket (requester only, once)
+ */
+export const submitTicketFeedback = async (ticketId: string,
+    feedbackInput: FeedbackInput, options?: Parameters<typeof customFetch>[1]): Promise<TicketFeedback> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TicketFeedback>(getSubmitTicketFeedbackUrl(ticketId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(feedbackInput)
+  }
+);}
+
+
+
+
+
+export const getSubmitTicketFeedbackMutationKey = () => ['submitTicketFeedback'] as const;
+
+export const getSubmitTicketFeedbackMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTicketFeedback>>, TError,SubmitTicketFeedbackMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitTicketFeedback>>, TError,SubmitTicketFeedbackMutationVariables, TContext> => {
+
+const mutationKey = getSubmitTicketFeedbackMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitTicketFeedback>>, SubmitTicketFeedbackMutationVariables> = (props) => {
+          const {ticketId,data} = props ?? {};
+
+          return  submitTicketFeedback(ticketId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitTicketFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof submitTicketFeedback>>>
+    export type SubmitTicketFeedbackMutationBody = BodyType<FeedbackInput>
+    export type SubmitTicketFeedbackMutationError = ErrorType<unknown>
+    export type SubmitTicketFeedbackMutationVariables = {ticketId: string;data: BodyType<FeedbackInput>}
+
+    /**
+ * @summary Rate a resolved ticket (requester only, once)
+ */
+export const useSubmitTicketFeedback = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTicketFeedback>>, TError,SubmitTicketFeedbackMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitTicketFeedback>>,
+        TError,
+        SubmitTicketFeedbackMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSubmitTicketFeedbackMutationOptions(options));
     }
 
 export const getGetDashboardSummaryUrl = () => {
@@ -1740,4 +2091,258 @@ export function useAdminListAutomationLogs<TData = Awaited<ReturnType<typeof adm
 
 
 
+
+export const getListKbArticlesUrl = () => {
+
+
+
+
+  return `/api/kb/articles`
+}
+
+/**
+ * @summary List knowledge-base articles (published only, except for admins)
+ */
+export const listKbArticles = async ( options?: Parameters<typeof customFetch>[1]): Promise<KbArticle[]> => {
+
+  return customFetch<KbArticle[]>(getListKbArticlesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListKbArticlesQueryKey = () => {
+    return [
+    `/api/kb/articles`
+    ] as const;
+    }
+
+
+export const getListKbArticlesQueryOptions = <TData = Awaited<ReturnType<typeof listKbArticles>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKbArticles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListKbArticlesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listKbArticles>>> = ({ signal }) => listKbArticles({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listKbArticles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListKbArticlesQueryResult = NonNullable<Awaited<ReturnType<typeof listKbArticles>>>
+export type ListKbArticlesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List knowledge-base articles (published only, except for admins)
+ */
+
+export function useListKbArticles<TData = Awaited<ReturnType<typeof listKbArticles>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKbArticles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListKbArticlesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAdminCreateKbArticleUrl = () => {
+
+
+
+
+  return `/api/admin/kb-articles`
+}
+
+/**
+ * @summary Create an article and embed it for AI search (admin only)
+ */
+export const adminCreateKbArticle = async (kbArticleInput: KbArticleInput, options?: Parameters<typeof customFetch>[1]): Promise<KbArticleResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<KbArticleResult>(getAdminCreateKbArticleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(kbArticleInput)
+  }
+);}
+
+
+
+
+
+export const getAdminCreateKbArticleMutationKey = () => ['adminCreateKbArticle'] as const;
+
+export const getAdminCreateKbArticleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateKbArticle>>, TError,AdminCreateKbArticleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateKbArticle>>, TError,AdminCreateKbArticleMutationVariables, TContext> => {
+
+const mutationKey = getAdminCreateKbArticleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateKbArticle>>, AdminCreateKbArticleMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminCreateKbArticle(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateKbArticleMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateKbArticle>>>
+    export type AdminCreateKbArticleMutationBody = BodyType<KbArticleInput>
+    export type AdminCreateKbArticleMutationError = ErrorType<unknown>
+    export type AdminCreateKbArticleMutationVariables = {data: BodyType<KbArticleInput>}
+
+    /**
+ * @summary Create an article and embed it for AI search (admin only)
+ */
+export const useAdminCreateKbArticle = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateKbArticle>>, TError,AdminCreateKbArticleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateKbArticle>>,
+        TError,
+        AdminCreateKbArticleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminCreateKbArticleMutationOptions(options));
+    }
+
+export const getAdminUpdateKbArticleUrl = (articleId: string,) => {
+
+
+
+
+  return `/api/admin/kb-articles/${articleId}`
+}
+
+/**
+ * @summary Edit, publish or unpublish an article (admin only)
+ */
+export const adminUpdateKbArticle = async (articleId: string,
+    kbArticleUpdate: KbArticleUpdate, options?: Parameters<typeof customFetch>[1]): Promise<KbArticleResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<KbArticleResult>(getAdminUpdateKbArticleUrl(articleId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(kbArticleUpdate)
+  }
+);}
+
+
+
+
+
+export const getAdminUpdateKbArticleMutationKey = () => ['adminUpdateKbArticle'] as const;
+
+export const getAdminUpdateKbArticleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateKbArticle>>, TError,AdminUpdateKbArticleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateKbArticle>>, TError,AdminUpdateKbArticleMutationVariables, TContext> => {
+
+const mutationKey = getAdminUpdateKbArticleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateKbArticle>>, AdminUpdateKbArticleMutationVariables> = (props) => {
+          const {articleId,data} = props ?? {};
+
+          return  adminUpdateKbArticle(articleId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateKbArticleMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateKbArticle>>>
+    export type AdminUpdateKbArticleMutationBody = BodyType<KbArticleUpdate>
+    export type AdminUpdateKbArticleMutationError = ErrorType<unknown>
+    export type AdminUpdateKbArticleMutationVariables = {articleId: string;data: BodyType<KbArticleUpdate>}
+
+    /**
+ * @summary Edit, publish or unpublish an article (admin only)
+ */
+export const useAdminUpdateKbArticle = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateKbArticle>>, TError,AdminUpdateKbArticleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateKbArticle>>,
+        TError,
+        AdminUpdateKbArticleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminUpdateKbArticleMutationOptions(options));
+    }
 

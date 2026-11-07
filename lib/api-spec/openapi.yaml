@@ -96,6 +96,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request a password reset email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordInput"
+      responses:
+        "200":
+          description: Always returned, whether or not the account exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Set a new password with a reset token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
   /tickets:
     get:
       operationId: listTickets
@@ -266,6 +304,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ticket"
+  /tickets/{ticketId}/feedback:
+    get:
+      operationId: getTicketFeedback
+      tags: [tickets]
+      summary: Get the satisfaction rating for a ticket, if one was given
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The rating, or null when none has been given
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketFeedbackResponse"
+    post:
+      operationId: submitTicketFeedback
+      tags: [tickets]
+      summary: Rate a resolved ticket (requester only, once)
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackInput"
+      responses:
+        "201":
+          description: Rating saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketFeedback"
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -417,6 +496,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AutomationLogsResponse"
+  /kb/articles:
+    get:
+      operationId: listKbArticles
+      tags: [kb]
+      summary: List knowledge-base articles (published only, except for admins)
+      responses:
+        "200":
+          description: Articles ordered by category and title
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KbArticle"
+  /admin/kb-articles:
+    post:
+      operationId: adminCreateKbArticle
+      tags: [admin]
+      summary: Create an article and embed it for AI search (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KbArticleInput"
+      responses:
+        "201":
+          description: Article saved; embedded is false when the AI service was unreachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KbArticleResult"
+  /admin/kb-articles/{articleId}:
+    patch:
+      operationId: adminUpdateKbArticle
+      tags: [admin]
+      summary: Edit, publish or unpublish an article (admin only)
+      parameters:
+        - name: articleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KbArticleUpdate"
+      responses:
+        "200":
+          description: Article saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KbArticleResult"
 security:
   - cookieAuth: []
 components:
@@ -705,3 +840,69 @@ components:
         logs:
           type: array
           items: { $ref: "#/components/schemas/AutomationLog" }
+    FeedbackInput:
+      type: object
+      required: [rating]
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 1000 }
+    TicketFeedback:
+      type: object
+      required: [id, ticketId, rating, comment, createdAt]
+      properties:
+        id: { type: string }
+        ticketId: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    TicketFeedbackResponse:
+      type: object
+      required: [feedback]
+      properties:
+        feedback:
+          oneOf:
+            - $ref: "#/components/schemas/TicketFeedback"
+            - type: "null"
+    ForgotPasswordInput:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+    ResetPasswordInput:
+      type: object
+      required: [token, password]
+      properties:
+        token: { type: string, minLength: 20, maxLength: 200 }
+        password: { type: string, minLength: 10, maxLength: 128 }
+    KbArticle:
+      type: object
+      required: [id, title, body, category, isPublished, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        category: { type: string }
+        isPublished: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    KbArticleInput:
+      type: object
+      required: [title, body, category]
+      properties:
+        title: { type: string, minLength: 3, maxLength: 200 }
+        body: { type: string, minLength: 10, maxLength: 20000 }
+        category: { type: string, minLength: 2, maxLength: 80 }
+        isPublished: { type: boolean }
+    KbArticleUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 3, maxLength: 200 }
+        body: { type: string, minLength: 10, maxLength: 20000 }
+        category: { type: string, minLength: 2, maxLength: 80 }
+        isPublished: { type: boolean }
+    KbArticleResult:
+      type: object
+      required: [article, embedded]
+      properties:
+        article: { $ref: "#/components/schemas/KbArticle" }
+        embedded: { type: boolean }

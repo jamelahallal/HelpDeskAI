@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { KeyRound, Plus, Search, UserCheck, UserX, X } from 'lucide-react';
+import { KnowledgeBasePage } from '@/pages/knowledge-base';
 import {
   getAdminListAutomationLogsQueryKey,
   useAdminListAutomationLogs,
@@ -272,7 +273,7 @@ function AutomationPanel() {
 }
 
 export default function AdminPage({ user }: { user: User }) {
-  const [tab, setTab] = useState<'users' | 'sla' | 'automation'>('users');
+  const [tab, setTab] = useState<'users' | 'sla' | 'automation' | 'knowledge'>('users');
   if (user.role !== 'admin') {
     return <div className="content"><div className="panel"><div className="empty-state"><h3>Administrators only</h3><p>You do not have access to this area.</p></div></div></div>;
   }
@@ -282,7 +283,8 @@ export default function AdminPage({ user }: { user: User }) {
       <button role="tab" aria-selected={tab === 'users'} className={`btn ${tab === 'users' ? 'btn-dark' : ''}`} onClick={() => setTab('users')} data-testid="tab-users">Users</button>
       <button role="tab" aria-selected={tab === 'sla'} className={`btn ${tab === 'sla' ? 'btn-dark' : ''}`} onClick={() => setTab('sla')} data-testid="tab-sla">SLA rules</button>
       <button role="tab" aria-selected={tab === 'automation'} className={`btn ${tab === 'automation' ? 'btn-dark' : ''}`} onClick={() => setTab('automation')} data-testid="tab-automation">Automation</button>
+      <button role="tab" aria-selected={tab === 'knowledge'} className={`btn ${tab === 'knowledge' ? 'btn-dark' : ''}`} onClick={() => setTab('knowledge')} data-testid="tab-knowledge">Knowledge base</button>
     </div>
-    {tab === 'users' ? <UsersPanel currentUserId={user.id} /> : tab === 'sla' ? <SlaPanel /> : <AutomationPanel />}
+    {tab === 'users' ? <UsersPanel currentUserId={user.id} /> : tab === 'sla' ? <SlaPanel /> : tab === 'knowledge' ? <KnowledgeBasePage user={user} embedded /> : <AutomationPanel />}
   </div>;
 }
