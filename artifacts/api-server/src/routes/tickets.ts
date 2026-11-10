@@ -105,7 +105,7 @@ async function getTicketDetailResponse(ticket: Ticket, viewer: User) {
     ? await db
         .select({ id: kbArticlesTable.id, title: kbArticlesTable.title })
         .from(kbArticlesTable)
-        .where(inArray(kbArticlesTable.id, articleIds))
+        .where(and(inArray(kbArticlesTable.id, articleIds), eq(kbArticlesTable.isPublished, true)))
     : [];
  
   const parsed = GetTicketResponse.parse({

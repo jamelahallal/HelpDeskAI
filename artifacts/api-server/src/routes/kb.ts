@@ -33,7 +33,7 @@ function toArticle(row: ArticleRow) {
 }
 
 /** Must match how backfillArticleEmbeddings() builds its input, or search quality drifts. */
-const embeddingText = (article: { title: string; body: string }) => `${article.title}\n\n${article.body}`;
+const embeddingText = (article: { title: string; body: string }) => `${article.title}\n${article.body}`;
 
 async function tryEmbed(article: { title: string; body: string }): Promise<number[] | null> {
   try {
