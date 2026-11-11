@@ -15,11 +15,15 @@ export function AppFrame({ user, children }: { user: User; children: React.React
   const [error, setError] = useState('');
   const signOut = () => logout.mutate(undefined, { onSuccess: () => { client.clear(); navigate('/login'); }, onError: () => setError('Sign out did not complete. Please try again.') });
   const nav = [
-    { href: '/', label: 'Overview', icon: LayoutDashboard },
-    { href: '/tickets', label: 'Tickets', icon: TicketIcon },
-    { href: '/knowledge-base', label: 'Knowledge base', icon: BookOpen },
-    ...(user.role === 'admin' ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
-  ];
+  { href: '/', label: 'Overview', icon: LayoutDashboard },
+  { href: '/tickets', label: 'Tickets', icon: TicketIcon },
+  ...(user.role === 'admin'
+    ? [
+        { href: '/knowledge-base', label: 'Knowledge base', icon: BookOpen },
+        { href: '/admin', label: 'Admin', icon: ShieldCheck },
+      ]
+    : []),
+];
   return <div className="app-shell">
     <aside className="sidebar">
       <Link href="/" className="brand" data-testid="link-brand"><span className="brand-mark"><Headphones size={17} /></span><span>helpdesk<span style={{ color: '#54c9b0' }}>ai</span></span></Link>

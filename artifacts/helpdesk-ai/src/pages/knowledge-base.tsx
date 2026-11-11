@@ -8,6 +8,7 @@ import {
   useListKbArticles,
 } from '@workspace/api-client-react';
 import type { KbArticle, User } from '@workspace/api-client-react';
+import { Redirect } from 'wouter';
 
 type Notice = { kind: 'success' | 'warning' | 'error'; text: string } | null;
 
@@ -55,7 +56,7 @@ function ArticleForm({ article, categories, onDone, onNotice }: { article?: KbAr
     <div className="form-group"><label className="form-label" htmlFor={`kb-title-${uid}`}>Title</label><input id={`kb-title-${uid}`} className="field" required minLength={3} maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} data-testid="input-kb-title" /></div>
     <div className="form-group"><label className="form-label" htmlFor={`kb-category-${uid}`}>Category</label><input id={`kb-category-${uid}`} className="field" list={`kb-categories-${uid}`} required minLength={2} maxLength={80} value={category} onChange={(e) => setCategory(e.target.value)} data-testid="input-kb-category" /><datalist id={`kb-categories-${uid}`}>{categories.map((item) => <option key={item} value={item} />)}</datalist></div>
     <div className="form-group"><label className="form-label" htmlFor={`kb-body-${uid}`}>Article text</label><textarea id={`kb-body-${uid}`} className="textarea" rows={10} required minLength={10} maxLength={20000} value={body} onChange={(e) => setBody(e.target.value)} data-testid="input-kb-body" /></div>
-    <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14, fontSize: 13 }}><input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} data-testid="input-kb-published" />Published: visible to everyone and used for AI suggestions</label>
+    <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14, fontSize: 13 }}><input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} data-testid="input-kb-published" />Published: used for AI suggestions</label>
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 9 }}>
       <button type="button" className="btn" onClick={onDone} data-testid="button-cancel-kb">Cancel</button>
       <button type="submit" className="btn btn-primary" disabled={pending} data-testid="button-save-kb">{pending ? 'Saving…' : article ? 'Save changes' : 'Create article'}</button>
@@ -95,7 +96,9 @@ export function KnowledgeBasePage({ user, embedded = false }: { user: User; embe
     });
   };
 
-   return <div className={embedded ? 'fade-in' : 'content fade-in'}>
+  if (!isAdmin) return <Redirect to="/" />;
+
+  return <div className={embedded ? 'fade-in' : 'content fade-in'}>
     {!embedded && <div className="page-heading"><div><div className="eyebrow">SERVICE DESK / KNOWLEDGE BASE</div><h1 className="page-title">Knowledge base</h1><p className="page-subtitle">Step-by-step help for common problems. The same articles power the AI suggestions on tickets.</p></div></div>}
     <div className="toolbar">
       <div className="search-wrap"><Search size={15} /><input className="field" type="search" placeholder="Search articles…" aria-label="Search articles" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="input-search-kb" /></div>
