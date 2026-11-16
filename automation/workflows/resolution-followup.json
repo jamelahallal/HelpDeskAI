@@ -57,11 +57,11 @@
       ],
       "onError": "continueErrorOutput",
       "parameters": {
-        "fromEmail": "HelpDeskAI <helpdesk@helpdesk.local>",
+        "fromEmail": "={{ $env.MAIL_FROM }}",
         "toEmail": "={{ $('Verify signature').first().json.data.requesterEmail }}",
         "subject": "={{ \"How did we do? \" + $('Verify signature').first().json.data.title }}",
         "emailFormat": "text",
-        "text": "=Hi,\n\nYour ticket \"{{ $('Verify signature').first().json.data.title }}\" was marked resolved.\nPlease open it and rate your support experience:\nhttp://localhost:8080/tickets/{{ $('Verify signature').first().json.data.ticketId }}\n\nIf the problem is not fixed, reply on the ticket.\n",
+        "text": "=Hi,\n\nYour ticket \"{{ $('Verify signature').first().json.data.title }}\" was marked resolved.\nPlease open it and rate your support experience:\n{{ $env.APP_URL }}/tickets/{{ $('Verify signature').first().json.data.ticketId }}\n\nIf the problem is not fixed, reply on the ticket.\n",
         "options": {}
       }
     },

@@ -19,12 +19,12 @@ export function SignIn({ register = false }: { register?: boolean }) {
     event.preventDefault(); setError('');
     if (register) {
       createAccount.mutate({ data: { fullName: fullName.trim(), email: email.trim(), password } }, {
-        onSuccess: (session) => { client.setQueryData(getGetCurrentUserQueryKey(), session.user); navigate('/'); },
+        onSuccess: (session) => { client.setQueryData(getGetCurrentUserQueryKey(), session.user); navigate('/dashboard'); },
         onError: (err) => setError(err.message || 'We could not create your account. Check your details and try again.'),
       });
     } else {
       login.mutate({ data: { email: email.trim(), password } }, {
-        onSuccess: (session) => { client.setQueryData(getGetCurrentUserQueryKey(), session.user); navigate('/'); },
+        onSuccess: (session) => { client.setQueryData(getGetCurrentUserQueryKey(), session.user); navigate('/dashboard'); },
         onError: (err) => setError(err.message || 'Email or password was not accepted. Please try again.'),
       });
     }

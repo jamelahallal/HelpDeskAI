@@ -9,16 +9,19 @@ import { TicketDetailPage } from '@/pages/ticket-detail';
 import { Protected } from '@/components/protected';
 import { ForgotPassword, ResetPassword } from '@/pages/password-reset';
 import { KnowledgeBasePage } from '@/pages/knowledge-base';
+import HomePage from '@/pages/home';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
 function Router() {
   const [location] = useLocation();
+  if (location === '/') return <HomePage />; 
   if (location === '/login') return <SignIn />;
   if (location === '/register') return <SignIn register />;
   if (location === '/forgot-password') return <ForgotPassword />;
   if (location === '/reset-password') return <ResetPassword />;
   return <Protected>{(user) => <Switch>
+    <Route path="/" component={HomePage} />
     <Route path="/" component={() => <Dashboard user={user} />} />
     <Route path="/tickets" component={TicketsPage} />
     <Route path="/tickets/:ticketId" component={() => <TicketDetailPage user={user} />} />

@@ -42,11 +42,11 @@
       ],
       "onError": "continueErrorOutput",
       "parameters": {
-        "fromEmail": "HelpDeskAI <helpdesk@helpdesk.local>",
-        "toEmail": "admin@helpdesk.local",
+        "fromEmail": "={{ $env.MAIL_FROM }}",
+        "toEmail": "={{ $env.ADMIN_EMAIL }}",
         "subject": "={{ \"[P1 ESCALATION] \" + $json.data.title }}",
         "emailFormat": "text",
-        "text": "=A P1 ticket needs immediate attention.\n\nTitle: {{ $json.data.title }}\n\nOpen it: http://localhost:8080/tickets/{{ $json.data.ticketId }}\n",
+        "text": "=A P1 ticket needs immediate attention.\n\nTitle: {{ $json.data.title }}\n\nOpen it: {{ $env.APP_URL }}/tickets/{{ $json.data.ticketId }}\n",
         "options": {}
       }
     },

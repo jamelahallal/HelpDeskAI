@@ -70,11 +70,11 @@
       ],
       "onError": "continueErrorOutput",
       "parameters": {
-        "fromEmail": "HelpDeskAI <helpdesk@helpdesk.local>",
+        "fromEmail": "={{ $env.MAIL_FROM }}",
         "toEmail": "={{ $json.agentEmail }}",
         "subject": "={{ \"[SLA warning] \" + $json.title }}",
         "emailFormat": "text",
-        "text": "=Hi {{ $json.agentName }},\n\nTicket \"{{ $json.title }}\" ({{ $json.priority }}) has used 75% or more of its SLA window.\nSLA deadline: {{ $json.slaDeadline }}\n\nOpen it: http://localhost:8080/tickets/{{ $json.id }}\n",
+        "text": "=Hi {{ $json.agentName }},\n\nTicket \"{{ $json.title }}\" ({{ $json.priority }}) has used 75% or more of its SLA window.\nSLA deadline: {{ $json.slaDeadline }}\n\nOpen it: {{ $env.APP_URL }}/tickets/{{ $json.id }}\n",
         "options": {}
       }
     },

@@ -42,11 +42,11 @@
       ],
       "onError": "continueErrorOutput",
       "parameters": {
-        "fromEmail": "HelpDeskAI <helpdesk@helpdesk.local>",
-        "toEmail": "support@helpdesk.local",
+        "fromEmail": "={{ $env.MAIL_FROM }}",
+        "toEmail": "={{ $env.SUPPORT_EMAIL }}",
         "subject": "={{ \"[New ticket] \" + $json.data.title }}",
         "emailFormat": "text",
-        "text": "=A new ticket was created.\n\nTitle: {{ $json.data.title }}\nPriority: {{ $json.data.priority }}\nCategory: {{ $json.data.category }}\nRequester: {{ $json.data.requesterEmail }}\n\nOpen it: http://localhost:8080/tickets/{{ $json.data.ticketId }}\n",
+        "text": "=A new ticket was created.\n\nTitle: {{ $json.data.title }}\nPriority: {{ $json.data.priority }}\nCategory: {{ $json.data.category }}\nRequester: {{ $json.data.requesterEmail }}\n\nOpen it: {{ $env.APP_URL }}/tickets/{{ $json.data.ticketId }}\n",
         "options": {}
       }
     },
