@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   Database,
+  Headphones,
   Inbox,
   Mail,
   RotateCcw,
@@ -70,13 +71,11 @@ const steps: Step[] = [
 const features: {
   icon: LucideIcon;
   title: string;
-  accent: string;
   points: string[];
 }[] = [
   {
     icon: Ticket,
     title: "Tickets & SLAs",
-    accent: "bg-blue-500/10 text-blue-600 border-blue-200/60",
     points: [
       "Lifecycle: new → assigned → in progress → resolved → closed",
       "Public comments and agent-only internal notes",
@@ -87,7 +86,6 @@ const features: {
   {
     icon: Sparkles,
     title: "AI analysis",
-    accent: "bg-indigo-500/10 text-indigo-600 border-indigo-200/60",
     points: [
       "Suggested category, priority, urgency and summary",
       "Suggested support team and draft response",
@@ -98,7 +96,6 @@ const features: {
   {
     icon: BookOpen,
     title: "Knowledge base & RAG",
-    accent: "bg-emerald-500/10 text-emerald-600 border-emerald-200/60",
     points: [
       "Agents and admins manage articles",
       "Articles are embedded and searched with pgvector",
@@ -109,7 +106,6 @@ const features: {
   {
     icon: Workflow,
     title: "n8n automation",
-    accent: "bg-amber-500/10 text-amber-600 border-amber-200/60",
     points: [
       "New ticket: notify support and request analysis",
       "SLA warning: alert the assigned agent",
@@ -121,21 +117,21 @@ const features: {
 
 const roles = [
   {
+    code: "ROLE / 01",
     name: "Requester",
     tag: "Self-Service Portal",
-    color: "border-t-blue-500",
     text: "Creates tickets, follows progress, closes resolved tickets and rates the support.",
   },
   {
+    code: "ROLE / 02",
     name: "Agent",
     tag: "AI-Assisted Workspace",
-    color: "border-t-indigo-600",
     text: "Works the queue, reviews AI suggestions, assigns, comments and resolves.",
   },
   {
+    code: "ROLE / 03",
     name: "Admin",
     tag: "System & SLA Control",
-    color: "border-t-emerald-500",
     text: "Manages users, SLA rules, the knowledge base and watches workload and automation health.",
   },
 ];
@@ -144,41 +140,41 @@ export default function HomePage() {
   const [suggestionStatus, setSuggestionStatus] = useState<"pending" | "accepted" | "ignored">("pending");
 
   return (
-    <div className="min-h-screen bg-slate-50/50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1F2A37] selection:bg-emerald-100 selection:text-emerald-950">
+      {/* Sticky Header matching your sign-in brand */}
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-[#1F2A37] text-white">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5 font-bold tracking-tight text-slate-900">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-600/20">
-              <ShieldCheck className="h-4.5 w-4.5" />
+          <Link href="/" className="flex items-center gap-2.5 font-bold tracking-tight">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#10B981] text-white shadow-sm">
+              <Headphones className="h-4 w-4" />
             </div>
-            <span className="text-lg">
-              HelpDesk<span className="text-indigo-600">AI</span>
+            <span className="text-lg tracking-tight text-white">
+              helpdesk<span className="font-semibold text-[#34D399]">ai</span>
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1 sm:gap-2 text-sm font-medium">
+          <nav className="flex items-center gap-1.5 sm:gap-2 text-sm font-medium">
             <a
               href="#how"
-              className="hidden rounded-lg px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:inline-block"
+              className="hidden rounded-lg px-3 py-2 text-slate-300 transition-colors hover:bg-white/5 hover:text-white sm:inline-block"
             >
               How it works
             </a>
             <a
               href="#features"
-              className="hidden rounded-lg px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:inline-block"
+              className="hidden rounded-lg px-3 py-2 text-slate-300 transition-colors hover:bg-white/5 hover:text-white sm:inline-block"
             >
               Features
             </a>
             <Link
               href="/login"
-              className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-slate-700 shadow-2xs transition-all hover:border-slate-300 hover:bg-slate-50"
+              className="rounded-lg border border-slate-600/80 bg-transparent px-3.5 py-2 text-slate-200 transition-all hover:border-slate-500 hover:bg-white/5 hover:text-white"
             >
               Sign in
             </Link>
             <Link
               href="/register"
-              className="rounded-lg bg-indigo-600 px-3.5 py-2 text-white shadow-sm shadow-indigo-600/25 transition-all hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/20"
+              className="rounded-lg bg-[#0E7C66] px-3.5 py-2 text-white shadow-sm transition-all hover:bg-[#0B6654]"
             >
               Get started
             </Link>
@@ -187,31 +183,30 @@ export default function HomePage() {
       </header>
 
       <main>
-        {/* Hero Section with Subtle Glow & Interactive Demo Card */}
-        <section className="relative overflow-hidden border-b border-slate-200/80 bg-white pt-14 pb-20 sm:pt-20 sm:pb-24">
-          {/* Decorative background gradient */}
+        {/* Hero Section matching the left panel of your login screen */}
+        <section className="relative overflow-hidden bg-[#1F2A37] pt-14 pb-20 text-white sm:pt-20 sm:pb-24">
+          {/* Subtle Concentric Arcs matching your login screen's background motif */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 -top-40 -z-0 flex justify-center overflow-hidden blur-3xl"
-          >
-            <div className="h-[340px] w-[780px] rounded-full bg-gradient-to-tr from-indigo-100 via-blue-50 to-purple-100 opacity-80" />
-          </div>
+            className="pointer-events-none absolute -right-32 -bottom-44 h-[520px] w-[520px] rounded-full border-[36px] border-white/[0.03]"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-12 -bottom-24 h-[360px] w-[360px] rounded-full border-[28px] border-white/[0.03]"
+          />
 
           <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-50/80 px-3.5 py-1 text-xs font-medium text-indigo-700 shadow-2xs">
-                <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-                AI-assisted IT support, with a human always in control
-              </span>
+              <div className="inline-flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#34D399]">
+                <span>IT SERVICE OPERATIONS / 01</span>
+              </div>
 
-              <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] lg:leading-[1.12]">
+              <h1 className="mt-5 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-[3.35rem] lg:leading-[1.12]">
                 An IT helpdesk that reads, suggests and automates —{" "}
-                <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                  and lets people decide.
-                </span>
+                <span className="text-[#34D399]">and lets people decide.</span>
               </h1>
 
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
                 HelpDeskAI combines ticketing and SLA tracking with retrieval-augmented AI analysis and n8n
                 workflows, so agents spend less time triaging and more time solving.
               </p>
@@ -219,29 +214,35 @@ export default function HomePage() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/30"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#0E7C66] px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#0B6654]"
                 >
                   Create an account <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/login"
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:text-slate-900"
+                  className="inline-flex items-center rounded-lg border border-slate-600 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition-all hover:border-slate-500 hover:bg-white/10"
                 >
                   Sign in
                 </Link>
               </div>
+
+              <div className="mt-8 flex items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                <span>Accountable Support</span>
+                <span>·</span>
+                <span>Measurable Service</span>
+              </div>
             </div>
 
             {/* Interactive Live Ticket Triage Preview */}
-            <div className="mx-auto mt-14 max-w-4xl rounded-2xl border border-slate-200/90 bg-slate-900 p-2 shadow-2xl shadow-slate-900/10">
-              <div className="rounded-xl bg-white p-5 sm:p-6">
+            <div className="mx-auto mt-14 max-w-4xl rounded-2xl border border-slate-700/80 bg-[#161F29] p-2 shadow-2xl">
+              <div className="rounded-xl bg-white p-5 text-[#1F2A37] sm:p-6">
                 {/* Mock Window Top Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
                   <div className="flex items-center gap-2.5">
-                    <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-700">
+                    <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-[#1F2A37]">
                       #TCK-1042
                     </span>
-                    <span className="text-sm font-semibold text-slate-900">
+                    <span className="text-sm font-semibold text-[#1F2A37]">
                       VPN disconnects every 15 mins on macOS Sequoia
                     </span>
                   </div>
@@ -255,34 +256,34 @@ export default function HomePage() {
                 {/* Split View: Ticket Body + AI Suggestion */}
                 <div className="mt-4 grid gap-5 md:grid-cols-5">
                   <div className="space-y-3 md:col-span-2">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                       Requester Note
                     </div>
-                    <p className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
+                    <p className="rounded-lg border border-slate-200/80 bg-[#F8FAFC] p-3 text-xs leading-relaxed text-slate-600">
                       "Ever since updating my MacBook this morning, WireGuard drops connection every 15 minutes and
                       forces me to re-authenticate SSO."
                     </p>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Database className="h-3.5 w-3.5 text-emerald-600" />
+                      <Database className="h-3.5 w-3.5 text-[#0E7C66]" />
                       <span>
-                        Matched KB: <strong className="font-medium text-slate-700">KB-089 (94% match)</strong>
+                        Matched KB: <strong className="font-medium text-[#1F2A37]">KB-089 (94% match)</strong>
                       </span>
                     </div>
                   </div>
 
                   {/* Interactive AI Triage Box */}
-                  <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 md:col-span-3">
+                  <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-4 md:col-span-3">
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0E7C66]">
                         <Bot className="h-4 w-4" /> AI Triage Suggestion
                       </span>
                       {suggestionStatus === "pending" && (
-                        <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-indigo-600 shadow-2xs">
+                        <span className="rounded-full border border-emerald-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-[#0E7C66]">
                           Awaiting agent review
                         </span>
                       )}
                       {suggestionStatus === "accepted" && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-900">
                           <CheckCircle2 className="h-3 w-3" /> Applied to Ticket
                         </span>
                       )}
@@ -294,16 +295,16 @@ export default function HomePage() {
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-md border border-indigo-200/70 bg-white px-2 py-1 text-slate-700">
-                        Team: <strong>Network Ops</strong>
+                      <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-slate-700">
+                        Team: <strong className="text-[#1F2A37]">Network Ops</strong>
                       </span>
-                      <span className="rounded-md border border-indigo-200/70 bg-white px-2 py-1 text-slate-700">
+                      <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-slate-700">
                         Priority: <strong className="text-amber-600">P2 · High</strong>
                       </span>
                     </div>
 
-                    <p className="mt-3 rounded-lg border border-indigo-100 bg-white p-2.5 text-xs leading-relaxed text-slate-600">
-                      <span className="font-semibold text-slate-800">Draft reply:</span> Hi! This is a known MTU
+                    <p className="mt-3 rounded-lg border border-slate-200/80 bg-white p-2.5 text-xs leading-relaxed text-slate-600">
+                      <span className="font-semibold text-[#1F2A37]">Draft reply:</span> Hi! This is a known MTU
                       token refresh issue on macOS Sequoia. Please reset your WireGuard profile via Self-Service...
                     </p>
 
@@ -313,7 +314,7 @@ export default function HomePage() {
                           <button
                             type="button"
                             onClick={() => setSuggestionStatus("accepted")}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-indigo-700"
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#0E7C66] px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#0B6654]"
                           >
                             <Check className="h-3.5 w-3.5" /> Accept & Apply
                           </button>
@@ -329,12 +330,12 @@ export default function HomePage() {
                         <button
                           type="button"
                           onClick={() => setSuggestionStatus("pending")}
-                          className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                          className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-[#0E7C66] hover:underline"
                         >
                           <RotateCcw className="h-3 w-3" /> Reset interactive demo
                         </button>
                       )}
-                      <span className="text-[11px] text-slate-400">Try clicking a button</span>
+                      <span className="text-[11px] text-slate-400">Interactive preview</span>
                     </div>
                   </div>
                 </div>
@@ -347,10 +348,10 @@ export default function HomePage() {
         <section id="how" className="py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="text-center">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-                End-to-End Pipeline
+              <span className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#0E7C66]">
+                WORKFLOW PIPELINE / 02
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#1F2A37]">
                 How a ticket flows through the system
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-slate-600">
@@ -362,28 +363,28 @@ export default function HomePage() {
               {steps.map(({ number, icon: Icon, title, text, badge }) => (
                 <li
                   key={title}
-                  className="group relative rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                  className="group relative rounded-xl border border-slate-200/90 bg-white p-6 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0E7C66]/40 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-[#0E7C66] transition-colors group-hover:bg-[#0E7C66] group-hover:text-white">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                    <span className="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-medium text-slate-600">
                       {badge}
                     </span>
                   </div>
                   <div className="mt-4 flex items-baseline gap-2">
-                    <span className="font-mono text-xs font-bold text-indigo-600">{number}</span>
-                    <h3 className="font-semibold text-slate-900">{title}</h3>
+                    <span className="font-mono text-xs font-bold text-[#0E7C66]">{number}</span>
+                    <h3 className="font-semibold text-[#1F2A37]">{title}</h3>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">{text}</p>
                 </li>
               ))}
             </ol>
 
-            {/* Dark Architecture Strip for Visual Contrast */}
-            <div className="mt-12 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white shadow-lg">
-              <div className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-indigo-400">
+            {/* Architecture Strip in Deep Slate Navy */}
+            <div className="mt-12 overflow-x-auto rounded-xl border border-slate-800 bg-[#1F2A37] p-6 text-white shadow-lg">
+              <div className="mb-4 text-center font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#34D399]">
                 System Architecture
               </div>
               <div className="flex min-w-[740px] items-center justify-between gap-2 text-xs sm:text-sm">
@@ -396,10 +397,10 @@ export default function HomePage() {
                   "Email / Mailpit",
                 ].map((node, i, arr) => (
                   <div key={node} className="flex items-center gap-2">
-                    <div className="rounded-xl border border-slate-700 bg-slate-800/90 px-3.5 py-2.5 text-center font-medium text-slate-100 shadow-inner">
+                    <div className="rounded-lg border border-slate-700 bg-[#161F29] px-3.5 py-2.5 text-center font-medium text-slate-100">
                       {node}
                     </div>
-                    {i < arr.length - 1 && <ArrowRight className="h-4 w-4 shrink-0 text-indigo-400" />}
+                    {i < arr.length - 1 && <ArrowRight className="h-4 w-4 shrink-0 text-[#34D399]" />}
                   </div>
                 ))}
               </div>
@@ -414,28 +415,28 @@ export default function HomePage() {
         <section id="features" className="border-t border-slate-200/80 bg-white py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="text-center">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-                Capabilities
+              <span className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#0E7C66]">
+                CAPABILITIES / 03
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">What's inside</h2>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#1F2A37]">What's inside</h2>
             </div>
 
             <div className="mt-12 grid gap-6 md:grid-cols-2">
-              {features.map(({ icon: Icon, title, accent, points }) => (
+              {features.map(({ icon: Icon, title, points }) => (
                 <div
                   key={title}
-                  className="rounded-2xl border border-slate-200/90 bg-slate-50/40 p-6 transition-all hover:border-slate-300 hover:bg-white hover:shadow-sm"
+                  className="rounded-xl border border-slate-200/90 bg-[#F8FAFC] p-6 transition-all hover:border-[#0E7C66]/40 hover:bg-white hover:shadow-sm"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${accent}`}>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-emerald-200/80 bg-emerald-50 text-[#0E7C66]">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+                    <h3 className="text-lg font-semibold text-[#1F2A37]">{title}</h3>
                   </div>
                   <ul className="mt-5 space-y-2.5 text-sm text-slate-600">
                     {points.map((p) => (
                       <li key={p} className="flex items-start gap-2.5">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#0E7C66]" />
                         <span>{p}</span>
                       </li>
                     ))}
@@ -447,7 +448,7 @@ export default function HomePage() {
         </section>
 
         {/* Human in the loop + SLA + notifications */}
-        <section className="border-t border-slate-200/80 bg-slate-50/70 py-16">
+        <section className="border-t border-slate-200/80 bg-[#F8FAFC] py-16">
           <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-3">
             {[
               {
@@ -468,12 +469,12 @@ export default function HomePage() {
             ].map(({ icon: Icon, title, text }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs"
+                className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-2xs"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-[#0E7C66]">
                   <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
+                <h3 className="mt-4 font-semibold text-[#1F2A37]">{title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{text}</p>
               </div>
             ))}
@@ -484,20 +485,23 @@ export default function HomePage() {
         <section className="border-t border-slate-200/80 bg-white py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="text-center">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-                Role-Based Access
+              <span className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#0E7C66]">
+                ACCESS CONTROL / 04
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Built for three roles</h2>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#1F2A37]">Built for three roles</h2>
             </div>
 
             <div className="mt-10 grid gap-6 md:grid-cols-3">
               {roles.map((r) => (
                 <div
                   key={r.name}
-                  className={`rounded-2xl border border-t-4 border-slate-200/90 ${r.color} bg-white p-6 shadow-2xs transition hover:shadow-md`}
+                  className="rounded-xl border border-t-4 border-slate-200/90 border-t-[#0E7C66] bg-white p-6 shadow-2xs transition hover:shadow-md"
                 >
-                  <span className="text-xs font-medium text-slate-500">{r.tag}</span>
-                  <h3 className="mt-1 text-lg font-bold text-slate-900">{r.name}</h3>
+                  <div className="flex items-center justify-between font-mono text-[11px] text-slate-400">
+                    <span>{r.code}</span>
+                    <span className="text-[#0E7C66]">{r.tag}</span>
+                  </div>
+                  <h3 className="mt-2 text-lg font-bold text-[#1F2A37]">{r.name}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">{r.text}</p>
                 </div>
               ))}
@@ -506,26 +510,37 @@ export default function HomePage() {
         </section>
 
         {/* CTA Banner */}
-        <section className="border-t border-slate-200/80 bg-slate-50 py-20">
+        <section className="border-t border-slate-200/80 bg-[#F8FAFC] py-20">
           <div className="mx-auto max-w-4xl px-4 sm:px-6">
-            <div className="rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-800 px-6 py-14 text-center text-white shadow-xl shadow-indigo-900/15 sm:px-12">
-              <h2 className="text-3xl font-bold tracking-tight">Ready to try it?</h2>
-              <p className="mx-auto mt-3 max-w-md text-indigo-100">
+            <div className="relative overflow-hidden rounded-2xl bg-[#1F2A37] px-6 py-14 text-center text-white shadow-xl sm:px-12">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-16 -bottom-24 h-64 w-64 rounded-full border-[20px] border-white/[0.04]"
+              />
+              <span className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#34D399]">
+                GET STARTED
+              </span>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight">Ready to try it?</h2>
+              <p className="mx-auto mt-3 max-w-md text-slate-300">
                 Sign in with your account or create a requester account to test the AI triage pipeline.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3.5">
                 <Link
                   href="/login"
-                  className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#0E7C66] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0B6654]"
                 >
-                  Sign in
+                  Sign in <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 rounded-lg border border-indigo-400/50 bg-indigo-600/40 px-6 py-3 text-sm font-semibold text-white backdrop-blur-xs transition hover:bg-indigo-500/50"
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-600 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   <Mail className="h-4 w-4" /> Register
                 </Link>
+              </div>
+              <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#34D399]" />
+                <span>Protected service desk access</span>
               </div>
             </div>
           </div>
@@ -533,7 +548,7 @@ export default function HomePage() {
       </main>
 
       <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500">
-        HelpDeskAI · Full-Stack AI & Workflow Portfolio Project
+        HelpDeskAI · Service desk workspace
       </footer>
     </div>
   );
